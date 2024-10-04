@@ -1,0 +1,49 @@
+
+services:
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+    stdin_open: true
+    tty: true
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    command: npm run dev --host # Important pour exposer Vite
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ./dockerfile
+    ports:
+      - "4000:3000"
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - postgres
+    environment:
+      - DATABASE_URL=postgresql://user:password@192.168.1.2:5432/mydb?schema=public
+    command: sh -c "npm run build && npm run start:dev"
+
+  postgres:
+    image: postgres:13
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+  
+  adminer:
+    image: adminer
+    ports:
+      - "8081:8080"
+
+volumes:  
+  postgres_data:
+
